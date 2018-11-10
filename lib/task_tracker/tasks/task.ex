@@ -17,6 +17,7 @@ defmodule TaskTracker.Tasks.Task do
   def changeset(task, attrs) do
     task
     |> cast(attrs, [:name, :desc, :done, :time_taken, :assigned_user_id])
+    |> unique_constraint(:name)
     |> validate_required([:name, :desc])
   end
 end
