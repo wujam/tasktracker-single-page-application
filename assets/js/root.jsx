@@ -3,60 +3,40 @@ import ReactDOM from 'react-dom';
 import _ from 'lodash';
 import $ from 'jquery';
 import { Link, BrowserRouter as Router, Route } from 'react-router-dom';
+import UserList from './user_list';
+import { Provider } from 'react-redux';
+import api from './api'
 
-export default function root_init(node) {
-  let tasks = window.tasks;
-  ReactDOM.render(<Root tasks={tasks} />, node);
+export default function root_init(node, store) {
+  ReactDOM.render(
+    <Provider store={store}>
+      <Root tasks={window.tasks} />
+    </Provider>, node);
 }
 
 class Root extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      tasks: props.tasks,
-      users: [],
-    };
 
-    //this.fetch_tasks();
-  }
-
-  fetch_tasks() {
-    $.ajax("/api/v1/tasks", {
-      method: "get",
-      dataType: "json",
-      contentType: "application/json; charset=UTF-8",
-      data: "",
-      success: (resp) => {
-        let state1 = _.assign({}, this.state, { tasks: resp.data });
-        this.setState(state1);
-      },
-    });
-  }
-
-  fetch_users() {
-    $.ajax("/api/v1/users", {
-      method: "get",
-      dataType: "json",
-      contentType: "application/json; charset=UTF-8",
-      data: "",
-      success: (resp) => {
-        let state1 = _.assign({}, this.state, { users: resp.data });
-        this.setState(state1);
-      },
-    });
+    api.fetch_tasks()
+	api.fetch_users()
   }
 
   render() {
     return <div>
       <Router>
         <div>
-          <Header root={this} />
-          <Route path="/" exact={true} render={() =>
-			<TaskList tasks={this.state.tasks} />
-          } />
-          <Route path="/users" exact={true} render={() =>
-            <UserList users={this.state.users} />
-          } />
+          <Header />
+          <div className="row">
+            <div className="col-8">
+              <Route path="/" exact={true} render={() =>
+                <TaskList />
+              } />
+              <Route path="/users" exact={true} render={() =>
+                <UserList />
+              } />
+            </div>
+          </div>
         </div>
       </Router>
     </div>;
@@ -67,10 +47,10 @@ function Header(props) {
   let {root} = props;
   return <div className="row my-2">
     <div className="col-4">
-      <h1><Link to={"/"}>Task Tracker</Link></h1>
+      <h1><Link to={"/"} onClick={() => api.fetch_tasks()}>Task Tracker</Link></h1>
     </div>
     <div className="col-2">
-      <p><Link to={"/users"} onClick={root.fetch_users.bind(root)}>Users</Link></p>
+      <p><Link to={"/users"} onClick={() => api.fetch_users()}>Users</Link></p>
     </div>
     <div className="col-6">
       <div className="form-inline my-2">
@@ -98,25 +78,6 @@ function Task(props) {
       Time Taken: {task.time_taken} <br/>
       Done: {"" + task.done} <br/>
       </p>
-    </div>
-  </div>;
-}
-
-function UserList(props) {
-  let rows = _.map(props.users, (uu) => <User key={uu.id} user={uu} />);
-  return <div className="row">
-    <div className="col-12">
-      <table className="table table-striped">
-        <thead>
-          <tr>
-            <th>email</th>
-            <th>admin?</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows}
-        </tbody>
-      </table>
     </div>
   </div>;
 }
